@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f7f7f7;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .chat-log {
+      margin-bottom: 20px;
+      height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .chat-log p {
+      margin: 0;
+      padding: 5px;
+    }
+    .input-section {
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h2>Chat with ChatGPT</h2>
+    <div class="chat-log" id="chat-log"></div>
+    <div class="input-section">
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatLog = document.getElementById("chat-log");
+
+    function appendMessage(message, sender) {
+      const messageElement = document.createElement("p");
+      messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+      chatLog.appendChild(messageElement);
+      chatLog.scrollTop = chatLog.scrollHeight;  // Scroll to the bottom
+    }
+
+    function sendMessage() {
+      const userInput = document.getElementById("user-input").value;
+      if (userInput.trim() === "") return;  // Don't send empty messages
+
+      appendMessage(userInput, "You");
+      document.getElementById("user-input").value = "";  // Clear the input field
+
+      fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userInput })
+      })
+      .then(response => response.json())
+      .then(data => {
+        appendMessage(data.response, "ChatGPT");
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+    }
+  </script>
+</body>
+</html>

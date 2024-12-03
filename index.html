@@ -3,98 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChatGPT Web App</title>
+  <title>ChatGPT Chatbot</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
       margin: 0;
       padding: 20px;
-      background-color: #f7f7f7;
     }
+
     .chat-container {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #fff;
+      background-color: white;
+      border-radius: 8px;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-    .chat-log {
-      margin-bottom: 20px;
-      height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 8px;
-    }
-    .chat-log p {
-      margin: 0;
-      padding: 5px;
-    }
-    .input-section {
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin: auto;
       display: flex;
-      gap: 10px;
+      flex-direction: column;
+      height: 500px;
+      overflow-y: auto;
     }
-    input[type="text"] {
-      width: 80%;
+
+    .message {
       padding: 10px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
+      margin: 5px 0;
+      border-radius: 8px;
     }
-    button {
+
+    .user-message {
+      background-color: #e0f7fa;
+      align-self: flex-end;
+    }
+
+    .bot-message {
+      background-color: #e1bee7;
+      align-self: flex-start;
+    }
+
+    .input-container {
+      display: flex;
+      margin-top: 20px;
+    }
+
+    .input-container input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .input-container button {
       padding: 10px;
       border: none;
-      background-color: #4CAF50;
+      background-color: #00796b;
       color: white;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #45a049;
+
+    .input-container button:hover {
+      background-color: #004d40;
     }
   </style>
 </head>
 <body>
-  <div class="chat-container">
-    <h2>Chat with ChatGPT</h2>
-    <div class="chat-log" id="chat-log"></div>
-    <div class="input-section">
-      <input type="text" id="user-input" placeholder="Type a message..." />
-      <button onclick="sendMessage()">Send</button>
-    </div>
+
+  <div class="chat-container" id="chat-container">
+    <div class="message bot-message">Hello! How can I assist you today?</div>
+  </div>
+
+  <div class="input-container">
+    <input type="text" id="user-message" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
   </div>
 
   <script>
-    const chatLog = document.getElementById("chat-log");
+    const chatContainer = document.getElementById('chat-container');
+    const userMessageInput = document.getElementById('user-message');
 
-    function appendMessage(message, sender) {
-      const messageElement = document.createElement("p");
-      messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-      chatLog.appendChild(messageElement);
-      chatLog.scrollTop = chatLog.scrollHeight;  // Scroll to the bottom
+    async function sendMessage() {
+      const message = userMessageInput.value;
+      if (!message) return;
+
+      // Display user message in the chat
+      appendMessage(message, 'user-message');
+
+      // Clear input field
+      userMessageInput.value = '';
+
+      try {
+        // Send message to the backend
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+
+        if (data.reply) {
+          // Display bot's reply
+          appendMessage(data.reply, 'bot-message');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
 
-    function sendMessage() {
-      const userInput = document.getElementById("user-input").value;
-      if (userInput.trim() === "") return;  // Don't send empty messages
+    function appendMessage(message, type) {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message', type);
+      messageElement.textContent = message;
+      chatContainer.appendChild(messageElement);
 
-      appendMessage(userInput, "You");
-      document.getElementById("user-input").value = "";  // Clear the input field
-
-      fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userInput })
-      })
-      .then(response => response.json())
-      .then(data => {
-        appendMessage(data.response, "ChatGPT");
-      })
-      .catch(error => {
-        console.error("Error:", error);
-      });
+      // Scroll to the bottom of the chat
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     }
   </script>
+
 </body>
 </html>
